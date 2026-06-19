@@ -58,6 +58,18 @@
       color: #7d6578;
     }
 
+    .sync-status {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      min-height: 18px;
+      transition: opacity 0.3s ease;
+    }
+
+    .sync-status.syncing { color: #c98a4b; }
+    .sync-status.synced { color: #4bbf8a; }
+    .sync-status.error { color: #e05d5d; }
+
     .month-controls {
       margin-top: 18px;
       display: flex;
@@ -93,6 +105,12 @@
     .month-controls button:hover {
       transform: translateY(-2px);
       opacity: 0.95;
+    }
+
+    .month-controls button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .layout {
@@ -156,6 +174,11 @@
       font-size: 0.95rem;
       color: var(--text);
       outline: none;
+    }
+
+    .day-card select:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .chosen-emoji {
@@ -251,6 +274,7 @@
         <button id="loadMonthBtn">Xem tháng</button>
         <button id="resetMonthBtn">Xóa dữ liệu tháng này</button>
       </div>
+      <div id="syncStatus" class="sync-status"></div>
     </div>
 
     <div class="layout">
@@ -269,11 +293,38 @@
     </div>
 
     <div class="footer-note">
-      💕 Mỗi ngày chọn một cảm xúc để lắng nghe bản thân nhiều hơn nhé!
+      💕 Mỗi ngày chọn một cảm xúc để lắng nghe bản thân nhiều hơn nhé! Dữ liệu được lưu trên Firebase ☁️
     </div>
   </div>
 
-  <script>
+  <!-- Firebase SDK (module qua CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCsNh0CDinV_DCujUaqJ2gHiU7zkUlGgds",
+      authDomain: "camxuctran.firebaseapp.com",
+      projectId: "camxuctran",
+      storageBucket: "camxuctran.firebasestorage.app",
+      messagingSenderId: "1084568945948",
+      appId: "1:1084568945948:web:5b2651933a3f7683a566d9"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Collection lưu dữ liệu cảm xúc, mỗi document = 1 tháng/năm
+    const COLLECTION_NAME = "emotions";
+
     const emotions = [
       { value: "", label: "Chọn cảm xúc...", emoji: "" },
       { value: "happy", label: "Vui vẻ", emoji: "😊" },
@@ -300,10 +351,14 @@
     const calendarGrid = document.getElementById("calendarGrid");
     const summaryBox = document.getElementById("summaryBox");
     const statList = document.getElementById("statList");
+    const syncStatus = document.getElementById("syncStatus");
 
     const now = new Date();
     let currentMonth = now.getMonth();
     let currentYear = now.getFullYear();
+
+    // Cache dữ liệu tháng hiện tại đang hiển thị (để renderStats không cần gọi lại Firestore)
+    let currentMonthData = {};
 
     function initSelectors() {
       monthNames.forEach((month, index) => {
@@ -323,38 +378,79 @@
       }
     }
 
-    function getStorageKey(month, year) {
-      return `emotion-tracker-${year}-${month}`;
+    function getDocId(month, year) {
+      return `${year}-${month}`;
     }
 
     function getDaysInMonth(month, year) {
       return new Date(year, month + 1, 0).getDate();
     }
 
-    function getSavedData(month, year) {
-      const raw = localStorage.getItem(getStorageKey(month, year));
-      return raw ? JSON.parse(raw) : {};
+    function setSyncStatus(text, type) {
+      syncStatus.textContent = text;
+      syncStatus.className = `sync-status ${type || ""}`;
     }
 
-    function saveDayEmotion(day, emotionValue, month, year) {
-      const data = getSavedData(month, year);
-      data[day] = emotionValue;
-      localStorage.setItem(getStorageKey(month, year), JSON.stringify(data));
-      renderStats(month, year);
+    function setControlsDisabled(disabled) {
+      loadMonthBtn.disabled = disabled;
+      resetMonthBtn.disabled = disabled;
+      document.querySelectorAll(".day-card select").forEach(sel => {
+        sel.disabled = disabled;
+      });
     }
 
-    function clearMonthData(month, year) {
-      localStorage.removeItem(getStorageKey(month, year));
+    // Lấy dữ liệu cảm xúc của 1 tháng từ Firestore
+    async function getSavedData(month, year) {
+      try {
+        const ref = doc(db, COLLECTION_NAME, getDocId(month, year));
+        const snap = await getDoc(ref);
+        return snap.exists() ? snap.data() : {};
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu từ Firebase:", err);
+        setSyncStatus("⚠️ Không thể tải dữ liệu từ Firebase", "error");
+        return {};
+      }
+    }
+
+    // Lưu cảm xúc 1 ngày lên Firestore
+    async function saveDayEmotion(day, emotionValue, month, year) {
+      setSyncStatus("☁️ Đang lưu...", "syncing");
+      try {
+        const ref = doc(db, COLLECTION_NAME, getDocId(month, year));
+        // merge: true để không xóa dữ liệu các ngày khác trong document
+        await setDoc(ref, { [String(day)]: emotionValue }, { merge: true });
+
+        currentMonthData[day] = emotionValue;
+        renderStats(month, year, currentMonthData);
+        setSyncStatus("✅ Đã lưu lên Firebase", "synced");
+        setTimeout(() => setSyncStatus("", ""), 2000);
+      } catch (err) {
+        console.error("Lỗi khi lưu dữ liệu lên Firebase:", err);
+        setSyncStatus("⚠️ Lưu thất bại, vui lòng thử lại", "error");
+      }
+    }
+
+    // Xóa toàn bộ dữ liệu của 1 tháng trên Firestore
+    async function clearMonthData(month, year) {
+      setSyncStatus("☁️ Đang xóa...", "syncing");
+      try {
+        const ref = doc(db, COLLECTION_NAME, getDocId(month, year));
+        await deleteDoc(ref);
+        setSyncStatus("✅ Đã xóa dữ liệu tháng này", "synced");
+        setTimeout(() => setSyncStatus("", ""), 2000);
+      } catch (err) {
+        console.error("Lỗi khi xóa dữ liệu trên Firebase:", err);
+        setSyncStatus("⚠️ Xóa thất bại, vui lòng thử lại", "error");
+      }
     }
 
     function getEmotionByValue(value) {
       return emotions.find(e => e.value === value) || emotions[0];
     }
 
-    function renderCalendar(month, year) {
+    function renderCalendar(month, year, savedData) {
       calendarGrid.innerHTML = "";
       const totalDays = getDaysInMonth(month, year);
-      const savedData = getSavedData(month, year);
 
       for (let day = 1; day <= totalDays; day++) {
         const dayCard = document.createElement("div");
@@ -396,8 +492,7 @@
       }
     }
 
-    function renderStats(month, year) {
-      const savedData = getSavedData(month, year);
+    function renderStats(month, year, savedData) {
       const counts = {};
       let selectedDays = 0;
 
@@ -452,21 +547,34 @@
       });
     }
 
-    function loadSelectedMonth() {
+    async function loadSelectedMonth() {
       currentMonth = parseInt(monthSelect.value, 10);
       currentYear = parseInt(yearSelect.value, 10);
-      renderCalendar(currentMonth, currentYear);
-      renderStats(currentMonth, currentYear);
+
+      setSyncStatus("☁️ Đang tải dữ liệu...", "syncing");
+      setControlsDisabled(true);
+
+      currentMonthData = await getSavedData(currentMonth, currentYear);
+
+      renderCalendar(currentMonth, currentYear, currentMonthData);
+      renderStats(currentMonth, currentYear, currentMonthData);
+
+      setControlsDisabled(false);
+      setSyncStatus("✅ Đã tải dữ liệu từ Firebase", "synced");
+      setTimeout(() => setSyncStatus("", ""), 2000);
     }
 
     loadMonthBtn.addEventListener("click", loadSelectedMonth);
 
-    resetMonthBtn.addEventListener("click", () => {
+    resetMonthBtn.addEventListener("click", async () => {
       const confirmReset = confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu cảm xúc của tháng này không?");
       if (confirmReset) {
-        clearMonthData(currentMonth, currentYear);
-        renderCalendar(currentMonth, currentYear);
-        renderStats(currentMonth, currentYear);
+        setControlsDisabled(true);
+        await clearMonthData(currentMonth, currentYear);
+        currentMonthData = {};
+        renderCalendar(currentMonth, currentYear, currentMonthData);
+        renderStats(currentMonth, currentYear, currentMonthData);
+        setControlsDisabled(false);
       }
     });
 
