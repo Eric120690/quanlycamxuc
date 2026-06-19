@@ -59,6 +59,35 @@
             border: 2px dashed #ffb6c1;
         }
 
+        .month-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .month-nav button {
+            padding: 6px 14px;
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+
+        .month-nav h2 {
+            color: #ff758c;
+            font-size: 20px;
+            min-width: 160px;
+            text-align: center;
+        }
+
+        .sync-status {
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 15px;
+            min-height: 16px;
+        }
+
         .control-group {
             display: flex;
             flex-direction: column;
@@ -190,7 +219,15 @@
 
     <div class="app-container">
         <h1>✨ Trạm Cảm Xúc 🎀</h1>
-        
+
+        <div class="month-nav">
+            <button onclick="changeMonth(-1)">←</button>
+            <h2 id="monthLabel"></h2>
+            <button onclick="changeMonth(1)">→</button>
+        </div>
+
+        <div class="sync-status" id="syncStatus">Đang kết nối...</div>
+
         <div class="controls">
             <div class="control-group">
                 <label for="daySelect">Ngày trong tháng:</label>
@@ -224,54 +261,130 @@
         </div>
     </div>
 
-    <script>
-        const daysInMonth = 31;
-        // Lấy dữ liệu từ LocalStorage (nếu có)
-        let emotionsData = JSON.parse(localStorage.getItem('myEmotions')) || {};
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            doc,
+            setDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        // Cấu hình Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyDFti0ratGklWSLBOwHq_j46ueeq9gFUrk",
+            authDomain: "camxuccuatoi-292ab.firebaseapp.com",
+            projectId: "camxuccuatoi-292ab",
+            storageBucket: "camxuccuatoi-292ab.firebasestorage.app",
+            messagingSenderId: "400212197667",
+            appId: "1:400212197667:web:a237d0e608ad15d39dcc96"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const emotionsCollection = collection(db, "emotions");
+
+        // Ngày hiện tại đang xem trên lịch (tháng/năm)
+        let viewDate = new Date();
+        viewDate.setDate(1);
+
+        // Dữ liệu cảm xúc, key dạng "YYYY-MM-DD" -> emoji
+        let emotionsData = {};
+
+        const monthNames = [
+            "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+            "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+        ];
+
+        function pad(n) {
+            return n.toString().padStart(2, '0');
+        }
+
+        function dateKey(year, month, day) {
+            return `${year}-${pad(month + 1)}-${pad(day)}`;
+        }
+
+        function daysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
 
         function init() {
-            // Tạo danh sách ngày cho dropdown
             const daySelect = document.getElementById('daySelect');
-            for(let i = 1; i <= daysInMonth; i++) {
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            const total = daysInMonth(year, month);
+
+            daySelect.innerHTML = '';
+            for (let i = 1; i <= total; i++) {
                 daySelect.innerHTML += `<option value="${i}">Ngày ${i}</option>`;
             }
-            
-            // Tự động chọn ngày hôm nay
-            const today = new Date().getDate();
-            if(today <= daysInMonth) {
-                daySelect.value = today;
+
+            const today = new Date();
+            if (today.getFullYear() === year && today.getMonth() === month) {
+                daySelect.value = today.getDate();
             }
 
-            updateUI();
-        }
+            document.getElementById('monthLabel').textContent = `${monthNames[month]} ${year}`;
 
-        function saveEmotion() {
-            const day = document.getElementById('daySelect').value;
-            const emotion = document.getElementById('emotionSelect').value;
-            
-            // Lưu dữ liệu vào object và LocalStorage
-            emotionsData[day] = emotion;
-            localStorage.setItem('myEmotions', JSON.stringify(emotionsData));
-            
-            updateUI();
-        }
-
-        function updateUI() {
             renderCalendar();
             renderStats();
         }
 
+        // Lắng nghe realtime từ Firestore — tự cập nhật khi có thay đổi
+        onSnapshot(emotionsCollection, (snapshot) => {
+            emotionsData = {};
+            snapshot.forEach((docSnap) => {
+                emotionsData[docSnap.id] = docSnap.data().emoji;
+            });
+            document.getElementById('syncStatus').textContent = '✅ Đã đồng bộ với Firebase';
+            init();
+        }, (error) => {
+            console.error(error);
+            document.getElementById('syncStatus').textContent = '⚠️ Lỗi kết nối Firebase: ' + error.message;
+        });
+
+        window.changeMonth = function (delta) {
+            viewDate.setMonth(viewDate.getMonth() + delta);
+            init();
+        };
+
+        window.saveEmotion = async function () {
+            const day = parseInt(document.getElementById('daySelect').value, 10);
+            const emotion = document.getElementById('emotionSelect').value;
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            const key = dateKey(year, month, day);
+
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.textContent = 'Đang lưu...';
+
+            try {
+                await setDoc(doc(db, "emotions", key), {
+                    emoji: emotion,
+                    year, month: month + 1, day,
+                    updatedAt: new Date().toISOString()
+                });
+                // onSnapshot sẽ tự cập nhật UI sau khi lưu thành công
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = '⚠️ Lưu thất bại: ' + err.message;
+            }
+        };
+
         function renderCalendar() {
             const calendar = document.getElementById('calendar');
             calendar.innerHTML = '';
-            
-            for(let i = 1; i <= daysInMonth; i++) {
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            const total = daysInMonth(year, month);
+
+            for (let i = 1; i <= total; i++) {
+                const key = dateKey(year, month, i);
+                const emoji = emotionsData[key] || '🤍';
+
                 const dayBox = document.createElement('div');
                 dayBox.className = 'day-box';
-                
-                // Mặc định là trái tim trắng nếu chưa chọn cảm xúc
-                const emoji = emotionsData[i] || '🤍'; 
-                
                 dayBox.innerHTML = `
                     <div class="day-num">${i}</div>
                     <div class="day-emoji">${emoji}</div>
@@ -282,21 +395,27 @@
 
         function renderStats() {
             const statsContainer = document.getElementById('stats');
+            const year = viewDate.getFullYear();
+            const month = viewDate.getMonth();
+            const total = daysInMonth(year, month);
             const counts = {};
-            
-            // Đếm số lượng từng loại cảm xúc
-            Object.values(emotionsData).forEach(emoji => {
-                counts[emoji] = (counts[emoji] || 0) + 1;
-            });
-            
+
+            for (let i = 1; i <= total; i++) {
+                const key = dateKey(year, month, i);
+                const emoji = emotionsData[key];
+                if (emoji) {
+                    counts[emoji] = (counts[emoji] || 0) + 1;
+                }
+            }
+
             statsContainer.innerHTML = '';
-            
-            if(Object.keys(counts).length === 0) {
-                statsContainer.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Bạn chưa ghi lại cảm xúc nào. Hãy bắt đầu nhé! 🌸</p>';
+
+            if (Object.keys(counts).length === 0) {
+                statsContainer.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Bạn chưa ghi lại cảm xúc nào trong tháng này. Hãy bắt đầu nhé! 🌸</p>';
                 return;
             }
 
-            for(const [emoji, count] of Object.entries(counts)) {
+            for (const [emoji, count] of Object.entries(counts)) {
                 statsContainer.innerHTML += `
                     <div class="stat-item">
                         <span>${emoji}</span> ${count} ngày
@@ -305,7 +424,6 @@
             }
         }
 
-        // Chạy hàm khởi tạo khi trang vừa load xong
         window.onload = init;
     </script>
 </body>
