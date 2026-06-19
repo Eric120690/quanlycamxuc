@@ -1,585 +1,312 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nhật ký cảm xúc 1 tháng</title>
-  <style>
-    :root {
-      --pink: #ff9ecf;
-      --pink-dark: #ff6fb3;
-      --peach: #ffd6e7;
-      --yellow: #fff4b8;
-      --mint: #c8f7dc;
-      --lavender: #e6dcff;
-      --sky: #dff4ff;
-      --text: #5b4b5f;
-      --white: #ffffff;
-      --shadow: 0 10px 25px rgba(255, 105, 180, 0.15);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật Ký Cảm Xúc 🌸</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
 
-    * {
-      box-sizing: border-box;
-    }
+        * {
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: linear-gradient(135deg, #fff0f7, #fef6d8, #e8f9ff);
-      color: var(--text);
-      min-height: 100vh;
-    }
+        body {
+            background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #555;
+        }
 
-    .container {
-      max-width: 1200px;
-      margin: 30px auto;
-      padding: 20px;
-    }
+        .app-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 15px 35px rgba(238, 156, 167, 0.3);
+        }
 
-    .header {
-      background: rgba(255, 255, 255, 0.85);
-      border-radius: 24px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-      text-align: center;
-      backdrop-filter: blur(8px);
-      border: 2px solid #ffd6ea;
-    }
+        h1 {
+            text-align: center;
+            color: #ff758c;
+            margin-bottom: 25px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
 
-    .header h1 {
-      margin: 0 0 10px;
-      font-size: 2rem;
-      color: var(--pink-dark);
-    }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #fff0f3;
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px dashed #ffb6c1;
+        }
 
-    .header p {
-      margin: 0;
-      font-size: 1rem;
-      color: #7d6578;
-    }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
 
-    .sync-status {
-      margin-top: 10px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      min-height: 18px;
-      transition: opacity 0.3s ease;
-    }
+        label {
+            font-weight: 700;
+            color: #ff758c;
+            font-size: 14px;
+        }
 
-    .sync-status.syncing { color: #c98a4b; }
-    .sync-status.synced { color: #4bbf8a; }
-    .sync-status.error { color: #e05d5d; }
+        select {
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 1px solid #ffb6c1;
+            background: #fff;
+            color: #555;
+            font-size: 16px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
 
-    .month-controls {
-      margin-top: 18px;
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+        select:focus {
+            box-shadow: 0 0 0 3px rgba(255, 117, 140, 0.2);
+        }
 
-    .month-controls select,
-    .month-controls button {
-      border: none;
-      border-radius: 14px;
-      padding: 10px 14px;
-      font-size: 1rem;
-      box-shadow: var(--shadow);
-    }
+        button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            align-self: flex-end;
+            margin-bottom: 2px;
+        }
 
-    .month-controls select {
-      background: #fff;
-      color: var(--text);
-      min-width: 150px;
-    }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 117, 140, 0.4);
+        }
 
-    .month-controls button {
-      background: linear-gradient(135deg, #ff9ecf, #ffb6d9);
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-    }
+        button:active {
+            transform: translateY(0);
+        }
 
-    .month-controls button:hover {
-      transform: translateY(-2px);
-      opacity: 0.95;
-    }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
 
-    .month-controls button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+        .day-box {
+            background: white;
+            border-radius: 15px;
+            padding: 15px 5px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1px solid transparent;
+        }
 
-    .layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-      margin-top: 24px;
-    }
+        .day-box:hover {
+            transform: translateY(-3px);
+            border-color: #ffb6c1;
+            box-shadow: 0 6px 15px rgba(255, 182, 193, 0.4);
+        }
 
-    .card {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      padding: 20px;
-      border: 2px solid #ffe2ef;
-    }
+        .day-num {
+            font-size: 12px;
+            font-weight: 700;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
 
-    .card h2 {
-      margin-top: 0;
-      color: var(--pink-dark);
-      font-size: 1.35rem;
-    }
+        .day-emoji {
+            font-size: 24px;
+        }
 
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 14px;
-    }
+        .stats-section {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
 
-    .day-card {
-      background: linear-gradient(180deg, #fff8fc, #fffdf7);
-      border-radius: 18px;
-      padding: 14px;
-      border: 2px dashed #ffc7df;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
+        .stats-section h3 {
+            color: #ff758c;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
 
-    .day-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 18px rgba(255, 111, 179, 0.15);
-    }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
 
-    .day-title {
-      font-weight: 700;
-      color: #d75b99;
-      margin-bottom: 8px;
-    }
+        .stat-item {
+            background: #fff0f3;
+            padding: 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+        }
 
-    .day-date {
-      font-size: 0.92rem;
-      margin-bottom: 10px;
-      color: #8a7084;
-    }
+        .stat-item span {
+            font-size: 18px;
+            margin-right: 5px;
+        }
 
-    .day-card select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 12px;
-      border: 2px solid #ffd1e6;
-      background: #fff;
-      font-size: 0.95rem;
-      color: var(--text);
-      outline: none;
-    }
-
-    .day-card select:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .chosen-emoji {
-      margin-top: 10px;
-      font-size: 1.8rem;
-      text-align: center;
-      min-height: 36px;
-    }
-
-    .stats-box {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .summary {
-      background: linear-gradient(135deg, #fff1f8, #f9f2ff);
-      border-radius: 18px;
-      padding: 14px;
-      border: 2px solid #f7d9ff;
-    }
-
-    .summary p {
-      margin: 8px 0;
-      font-size: 0.98rem;
-    }
-
-    .stat-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .stat-item {
-      background: linear-gradient(135deg, #fffdfd, #fef6ff);
-      border: 2px solid #ffe1f1;
-      border-radius: 16px;
-      padding: 10px 12px;
-    }
-
-    .stat-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    .bar-wrap {
-      width: 100%;
-      height: 12px;
-      background: #f5e8f0;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .bar {
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #ff9ecf, #ffd36e, #97e8b7);
-      width: 0%;
-      transition: width 0.35s ease;
-    }
-
-    .footer-note {
-      margin-top: 20px;
-      text-align: center;
-      color: #7c6b79;
-      font-size: 0.95rem;
-    }
-
-    .empty-text {
-      color: #a08b98;
-      font-style: italic;
-    }
-
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+        @media (max-width: 500px) {
+            .calendar {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🌸 Nhật ký cảm xúc 1 tháng 🌈</h1>
-      <p>Theo dõi tâm trạng mỗi ngày theo cách thật dễ thương, tích cực và đáng yêu 💖</p>
 
-      <div class="month-controls">
-        <select id="monthSelect"></select>
-        <select id="yearSelect"></select>
-        <button id="loadMonthBtn">Xem tháng</button>
-        <button id="resetMonthBtn">Xóa dữ liệu tháng này</button>
-      </div>
-      <div id="syncStatus" class="sync-status"></div>
-    </div>
-
-    <div class="layout">
-      <div class="card">
-        <h2>📅 Cảm xúc từng ngày</h2>
-        <div id="calendarGrid" class="calendar-grid"></div>
-      </div>
-
-      <div class="card">
-        <h2>📊 Thống kê cảm xúc</h2>
-        <div class="stats-box">
-          <div class="summary" id="summaryBox"></div>
-          <div class="stat-list" id="statList"></div>
+    <div class="app-container">
+        <h1>✨ Trạm Cảm Xúc 🎀</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="daySelect">Ngày trong tháng:</label>
+                <select id="daySelect"></select>
+            </div>
+            
+            <div class="control-group">
+                <label for="emotionSelect">Hôm nay bạn thế nào?</label>
+                <select id="emotionSelect">
+                    <option value="🥰">🥰 Yêu đời rạng rỡ</option>
+                    <option value="😄">😄 Vui vẻ năng lượng</option>
+                    <option value="😌">😌 Bình yên thư giãn</option>
+                    <option value="🥺">🥺 Hơi xúc động</option>
+                    <option value="😫">😫 Mệt mỏi rã rời</option>
+                    <option value="😡">😡 Bực mình chói chang</option>
+                    <option value="😭">😭 Buồn xỉu up xỉu down</option>
+                    <option value="✨">✨ Đầy tự hào</option>
+                </select>
+            </div>
+            
+            <button onclick="saveEmotion()">Ghi lại 💕</button>
         </div>
-      </div>
+
+        <div class="calendar" id="calendar"></div>
+
+        <div class="stats-section">
+            <h3>📊 Thống kê tháng này của bạn</h3>
+            <div class="stats-grid" id="stats">
+                <!-- Dữ liệu thống kê sẽ hiển thị ở đây -->
+            </div>
+        </div>
     </div>
 
-    <div class="footer-note">
-      💕 Mỗi ngày chọn một cảm xúc để lắng nghe bản thân nhiều hơn nhé! Dữ liệu được lưu trên Firebase ☁️
-    </div>
-  </div>
+    <script>
+        const daysInMonth = 31;
+        // Lấy dữ liệu từ LocalStorage (nếu có)
+        let emotionsData = JSON.parse(localStorage.getItem('myEmotions')) || {};
 
-  <!-- Firebase SDK (module qua CDN) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      deleteDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        function init() {
+            // Tạo danh sách ngày cho dropdown
+            const daySelect = document.getElementById('daySelect');
+            for(let i = 1; i <= daysInMonth; i++) {
+                daySelect.innerHTML += `<option value="${i}">Ngày ${i}</option>`;
+            }
+            
+            // Tự động chọn ngày hôm nay
+            const today = new Date().getDate();
+            if(today <= daysInMonth) {
+                daySelect.value = today;
+            }
 
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCsNh0CDinV_DCujUaqJ2gHiU7zkUlGgds",
-      authDomain: "camxuctran.firebaseapp.com",
-      projectId: "camxuctran",
-      storageBucket: "camxuctran.firebasestorage.app",
-      messagingSenderId: "1084568945948",
-      appId: "1:1084568945948:web:5b2651933a3f7683a566d9"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Collection lưu dữ liệu cảm xúc, mỗi document = 1 tháng/năm
-    const COLLECTION_NAME = "emotions";
-
-    const emotions = [
-      { value: "", label: "Chọn cảm xúc...", emoji: "" },
-      { value: "happy", label: "Vui vẻ", emoji: "😊" },
-      { value: "excited", label: "Hào hứng", emoji: "🤩" },
-      { value: "calm", label: "Bình yên", emoji: "😌" },
-      { value: "loved", label: "Được yêu thương", emoji: "🥰" },
-      { value: "motivated", label: "Có động lực", emoji: "💪" },
-      { value: "tired", label: "Mệt mỏi", emoji: "😴" },
-      { value: "sad", label: "Buồn", emoji: "😢" },
-      { value: "stressed", label: "Căng thẳng", emoji: "😣" },
-      { value: "angry", label: "Khó chịu", emoji: "😠" },
-      { value: "confused", label: "Rối bời", emoji: "😵" }
-    ];
-
-    const monthNames = [
-      "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
-      "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
-    ];
-
-    const monthSelect = document.getElementById("monthSelect");
-    const yearSelect = document.getElementById("yearSelect");
-    const loadMonthBtn = document.getElementById("loadMonthBtn");
-    const resetMonthBtn = document.getElementById("resetMonthBtn");
-    const calendarGrid = document.getElementById("calendarGrid");
-    const summaryBox = document.getElementById("summaryBox");
-    const statList = document.getElementById("statList");
-    const syncStatus = document.getElementById("syncStatus");
-
-    const now = new Date();
-    let currentMonth = now.getMonth();
-    let currentYear = now.getFullYear();
-
-    // Cache dữ liệu tháng hiện tại đang hiển thị (để renderStats không cần gọi lại Firestore)
-    let currentMonthData = {};
-
-    function initSelectors() {
-      monthNames.forEach((month, index) => {
-        const option = document.createElement("option");
-        option.value = index;
-        option.textContent = month;
-        if (index === currentMonth) option.selected = true;
-        monthSelect.appendChild(option);
-      });
-
-      for (let year = currentYear - 3; year <= currentYear + 3; year++) {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year;
-        if (year === currentYear) option.selected = true;
-        yearSelect.appendChild(option);
-      }
-    }
-
-    function getDocId(month, year) {
-      return `${year}-${month}`;
-    }
-
-    function getDaysInMonth(month, year) {
-      return new Date(year, month + 1, 0).getDate();
-    }
-
-    function setSyncStatus(text, type) {
-      syncStatus.textContent = text;
-      syncStatus.className = `sync-status ${type || ""}`;
-    }
-
-    function setControlsDisabled(disabled) {
-      loadMonthBtn.disabled = disabled;
-      resetMonthBtn.disabled = disabled;
-      document.querySelectorAll(".day-card select").forEach(sel => {
-        sel.disabled = disabled;
-      });
-    }
-
-    // Lấy dữ liệu cảm xúc của 1 tháng từ Firestore
-    async function getSavedData(month, year) {
-      try {
-        const ref = doc(db, COLLECTION_NAME, getDocId(month, year));
-        const snap = await getDoc(ref);
-        return snap.exists() ? snap.data() : {};
-      } catch (err) {
-        console.error("Lỗi khi tải dữ liệu từ Firebase:", err);
-        setSyncStatus("⚠️ Không thể tải dữ liệu từ Firebase", "error");
-        return {};
-      }
-    }
-
-    // Lưu cảm xúc 1 ngày lên Firestore
-    async function saveDayEmotion(day, emotionValue, month, year) {
-      setSyncStatus("☁️ Đang lưu...", "syncing");
-      try {
-        const ref = doc(db, COLLECTION_NAME, getDocId(month, year));
-        // merge: true để không xóa dữ liệu các ngày khác trong document
-        await setDoc(ref, { [String(day)]: emotionValue }, { merge: true });
-
-        currentMonthData[day] = emotionValue;
-        renderStats(month, year, currentMonthData);
-        setSyncStatus("✅ Đã lưu lên Firebase", "synced");
-        setTimeout(() => setSyncStatus("", ""), 2000);
-      } catch (err) {
-        console.error("Lỗi khi lưu dữ liệu lên Firebase:", err);
-        setSyncStatus("⚠️ Lưu thất bại, vui lòng thử lại", "error");
-      }
-    }
-
-    // Xóa toàn bộ dữ liệu của 1 tháng trên Firestore
-    async function clearMonthData(month, year) {
-      setSyncStatus("☁️ Đang xóa...", "syncing");
-      try {
-        const ref = doc(db, COLLECTION_NAME, getDocId(month, year));
-        await deleteDoc(ref);
-        setSyncStatus("✅ Đã xóa dữ liệu tháng này", "synced");
-        setTimeout(() => setSyncStatus("", ""), 2000);
-      } catch (err) {
-        console.error("Lỗi khi xóa dữ liệu trên Firebase:", err);
-        setSyncStatus("⚠️ Xóa thất bại, vui lòng thử lại", "error");
-      }
-    }
-
-    function getEmotionByValue(value) {
-      return emotions.find(e => e.value === value) || emotions[0];
-    }
-
-    function renderCalendar(month, year, savedData) {
-      calendarGrid.innerHTML = "";
-      const totalDays = getDaysInMonth(month, year);
-
-      for (let day = 1; day <= totalDays; day++) {
-        const dayCard = document.createElement("div");
-        dayCard.className = "day-card";
-
-        const dayTitle = document.createElement("div");
-        dayTitle.className = "day-title";
-        dayTitle.textContent = `Ngày ${day}`;
-
-        const dayDate = document.createElement("div");
-        dayDate.className = "day-date";
-        dayDate.textContent = `${day}/${month + 1}/${year}`;
-
-        const select = document.createElement("select");
-        emotions.forEach(emotion => {
-          const option = document.createElement("option");
-          option.value = emotion.value;
-          option.textContent = emotion.emoji ? `${emotion.emoji} ${emotion.label}` : emotion.label;
-          if ((savedData[day] || "") === emotion.value) {
-            option.selected = true;
-          }
-          select.appendChild(option);
-        });
-
-        const emojiBox = document.createElement("div");
-        emojiBox.className = "chosen-emoji";
-        emojiBox.textContent = getEmotionByValue(savedData[day] || "").emoji;
-
-        select.addEventListener("change", () => {
-          saveDayEmotion(day, select.value, month, year);
-          emojiBox.textContent = getEmotionByValue(select.value).emoji;
-        });
-
-        dayCard.appendChild(dayTitle);
-        dayCard.appendChild(dayDate);
-        dayCard.appendChild(select);
-        dayCard.appendChild(emojiBox);
-        calendarGrid.appendChild(dayCard);
-      }
-    }
-
-    function renderStats(month, year, savedData) {
-      const counts = {};
-      let selectedDays = 0;
-
-      emotions.forEach(emotion => {
-        if (emotion.value) counts[emotion.value] = 0;
-      });
-
-      Object.values(savedData).forEach(value => {
-        if (value && counts.hasOwnProperty(value)) {
-          counts[value]++;
-          selectedDays++;
+            updateUI();
         }
-      });
 
-      const totalDays = getDaysInMonth(month, year);
-      const entries = emotions
-        .filter(e => e.value)
-        .map(e => ({
-          ...e,
-          count: counts[e.value] || 0
-        }))
-        .sort((a, b) => b.count - a.count);
+        function saveEmotion() {
+            const day = document.getElementById('daySelect').value;
+            const emotion = document.getElementById('emotionSelect').value;
+            
+            // Lưu dữ liệu vào object và LocalStorage
+            emotionsData[day] = emotion;
+            localStorage.setItem('myEmotions', JSON.stringify(emotionsData));
+            
+            updateUI();
+        }
 
-      const topEmotion = entries.find(item => item.count > 0);
+        function updateUI() {
+            renderCalendar();
+            renderStats();
+        }
 
-      summaryBox.innerHTML = `
-        <p>🗓️ <strong>Tháng theo dõi:</strong> ${monthNames[month]} ${year}</p>
-        <p>💖 <strong>Số ngày đã chọn cảm xúc:</strong> ${selectedDays}/${totalDays}</p>
-        <p>🌟 <strong>Cảm xúc nổi bật nhất:</strong> ${
-          topEmotion ? `${topEmotion.emoji} ${topEmotion.label} (${topEmotion.count} ngày)` : '<span class="empty-text">Chưa có dữ liệu</span>'
-        }</p>
-      `;
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+            
+            for(let i = 1; i <= daysInMonth; i++) {
+                const dayBox = document.createElement('div');
+                dayBox.className = 'day-box';
+                
+                // Mặc định là trái tim trắng nếu chưa chọn cảm xúc
+                const emoji = emotionsData[i] || '🤍'; 
+                
+                dayBox.innerHTML = `
+                    <div class="day-num">${i}</div>
+                    <div class="day-emoji">${emoji}</div>
+                `;
+                calendar.appendChild(dayBox);
+            }
+        }
 
-      statList.innerHTML = "";
-      entries.forEach(item => {
-        const percent = selectedDays > 0 ? (item.count / selectedDays) * 100 : 0;
+        function renderStats() {
+            const statsContainer = document.getElementById('stats');
+            const counts = {};
+            
+            // Đếm số lượng từng loại cảm xúc
+            Object.values(emotionsData).forEach(emoji => {
+                counts[emoji] = (counts[emoji] || 0) + 1;
+            });
+            
+            statsContainer.innerHTML = '';
+            
+            if(Object.keys(counts).length === 0) {
+                statsContainer.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Bạn chưa ghi lại cảm xúc nào. Hãy bắt đầu nhé! 🌸</p>';
+                return;
+            }
 
-        const statItem = document.createElement("div");
-        statItem.className = "stat-item";
+            for(const [emoji, count] of Object.entries(counts)) {
+                statsContainer.innerHTML += `
+                    <div class="stat-item">
+                        <span>${emoji}</span> ${count} ngày
+                    </div>
+                `;
+            }
+        }
 
-        statItem.innerHTML = `
-          <div class="stat-top">
-            <span>${item.emoji} ${item.label}</span>
-            <span>${item.count} ngày</span>
-          </div>
-          <div class="bar-wrap">
-            <div class="bar" style="width: ${percent}%"></div>
-          </div>
-        `;
-
-        statList.appendChild(statItem);
-      });
-    }
-
-    async function loadSelectedMonth() {
-      currentMonth = parseInt(monthSelect.value, 10);
-      currentYear = parseInt(yearSelect.value, 10);
-
-      setSyncStatus("☁️ Đang tải dữ liệu...", "syncing");
-      setControlsDisabled(true);
-
-      currentMonthData = await getSavedData(currentMonth, currentYear);
-
-      renderCalendar(currentMonth, currentYear, currentMonthData);
-      renderStats(currentMonth, currentYear, currentMonthData);
-
-      setControlsDisabled(false);
-      setSyncStatus("✅ Đã tải dữ liệu từ Firebase", "synced");
-      setTimeout(() => setSyncStatus("", ""), 2000);
-    }
-
-    loadMonthBtn.addEventListener("click", loadSelectedMonth);
-
-    resetMonthBtn.addEventListener("click", async () => {
-      const confirmReset = confirm("Bạn có chắc muốn xóa toàn bộ dữ liệu cảm xúc của tháng này không?");
-      if (confirmReset) {
-        setControlsDisabled(true);
-        await clearMonthData(currentMonth, currentYear);
-        currentMonthData = {};
-        renderCalendar(currentMonth, currentYear, currentMonthData);
-        renderStats(currentMonth, currentYear, currentMonthData);
-        setControlsDisabled(false);
-      }
-    });
-
-    initSelectors();
-    loadSelectedMonth();
-  </script>
+        // Chạy hàm khởi tạo khi trang vừa load xong
+        window.onload = init;
+    </script>
 </body>
 </html>
