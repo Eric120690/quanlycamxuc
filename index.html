@@ -211,7 +211,7 @@
                 </select>
             </div>
             
-            <button onclick="saveEmotion()">Ghi lại 💕</button>
+            <button id="saveBtn">Ghi lại 💕</button>
         </div>
 
         <div class="calendar" id="calendar"></div>
@@ -219,41 +219,92 @@
         <div class="stats-section">
             <h3>📊 Thống kê tháng này của bạn</h3>
             <div class="stats-grid" id="stats">
-                <!-- Dữ liệu thống kê sẽ hiển thị ở đây -->
-            </div>
+                </div>
         </div>
     </div>
 
-    <script>
-        const daysInMonth = 31;
-        // Lấy dữ liệu từ LocalStorage (nếu có)
-        let emotionsData = JSON.parse(localStorage.getItem('myEmotions')) || {};
+    <script type="module">
+        // Import Firebase v10 SDKs thông qua CDN gstatic công khai
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        function init() {
-            // Tạo danh sách ngày cho dropdown
+        // Cấu hình Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyDFti0ratGklWSLBOwHq_j46ueeq9gFUrk",
+            authDomain: "camxuccuatoi-292ab.firebaseapp.com",
+            projectId: "camxuccuatoi-292ab",
+            storageBucket: "camxuccuatoi-292ab.firebasestorage.app",
+            messagingSenderId: "400212197667",
+            appId: "1:400212197667:web:a237d0e608ad15d39dcc96"
+        };
+
+        // Khởi tạo các dịch vụ Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Định nghĩa vị trí lưu trữ dữ liệu cảm xúc trên Cloud Firestore
+        // Lưu trữ trong collection "emotions_tracker" với document ID là "current_month"
+        const emotionDocRef = doc(db, "emotions_tracker", "current_month");
+
+        const daysInMonth = 31;
+        let emotionsData = {};
+
+        // Hàm khởi tạo ứng dụng
+        async function init() {
+            // 1. Tạo danh sách ngày cho dropdown select
             const daySelect = document.getElementById('daySelect');
             for(let i = 1; i <= daysInMonth; i++) {
                 daySelect.innerHTML += `<option value="${i}">Ngày ${i}</option>`;
             }
             
-            // Tự động chọn ngày hôm nay
+            // Tự động chọn ngày hiện tại dựa trên máy tính người dùng
             const today = new Date().getDate();
             if(today <= daysInMonth) {
                 daySelect.value = today;
             }
 
+            // 2. Lấy dữ liệu từ Firestore từ xa
+            try {
+                const docSnap = await getDoc(emotionDocRef);
+                if (docSnap.exists()) {
+                    emotionsData = docSnap.data();
+                } else {
+                    // Nếu trên Cloud chưa có gì, thử tìm ở LocalStorage cũ xem có dữ liệu không
+                    emotionsData = JSON.parse(localStorage.getItem('myEmotions')) || {};
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải dữ liệu từ Firestore: ", error);
+                // Nếu bị lỗi mạng hoặc quyền truy cập, dùng LocalStorage dự phòng
+                emotionsData = JSON.parse(localStorage.getItem('myEmotions')) || {};
+            }
+
+            // 3. Cập nhật giao diện sau khi tải xong dữ liệu
             updateUI();
+
+            // 4. Gán sự kiện click cho nút Lưu dữ liệu
+            document.getElementById('saveBtn').addEventListener('click', saveEmotion);
         }
 
-        function saveEmotion() {
+        // Hàm lưu trữ cảm xúc
+        async function saveEmotion() {
             const day = document.getElementById('daySelect').value;
             const emotion = document.getElementById('emotionSelect').value;
             
-            // Lưu dữ liệu vào object và LocalStorage
+            // Cập nhật vào đối tượng dữ liệu nội bộ
             emotionsData[day] = emotion;
-            localStorage.setItem('myEmotions', JSON.stringify(emotionsData));
             
+            // Cập nhật UI ngay lập tức để người dùng thấy ứng dụng chạy nhanh
             updateUI();
+            
+            // Tiến hành đồng bộ hóa dữ liệu lên Cloud Firestore một cách bất đồng bộ
+            try {
+                await setDoc(emotionDocRef, emotionsData);
+                // Đồng thời lưu vào LocalStorage để làm bản sao lưu phụ (Backup)
+                localStorage.setItem('myEmotions', JSON.stringify(emotionsData));
+            } catch (error) {
+                console.error("Lỗi khi lưu lên đám mây Firestore: ", error);
+                alert("Không thể đồng bộ lên đám mây Firestore! Dữ liệu của bạn tạm thời chỉ được lưu cục bộ tại máy.");
+            }
         }
 
         function updateUI() {
@@ -269,7 +320,7 @@
                 const dayBox = document.createElement('div');
                 dayBox.className = 'day-box';
                 
-                // Mặc định là trái tim trắng nếu chưa chọn cảm xúc
+                // Mặc định là trái tim trắng nếu ngày đó chưa được ghi nhận cảm xúc
                 const emoji = emotionsData[i] || '🤍'; 
                 
                 dayBox.innerHTML = `
@@ -284,7 +335,7 @@
             const statsContainer = document.getElementById('stats');
             const counts = {};
             
-            // Đếm số lượng từng loại cảm xúc
+            // Đếm số lượng của mỗi loại icon cảm xúc
             Object.values(emotionsData).forEach(emoji => {
                 counts[emoji] = (counts[emoji] || 0) + 1;
             });
@@ -305,8 +356,8 @@
             }
         }
 
-        // Chạy hàm khởi tạo khi trang vừa load xong
-        window.onload = init;
+        // Chạy hàm khởi tạo ngay sau khi mã script tải xong
+        init();
     </script>
 </body>
 </html>
